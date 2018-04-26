@@ -13,6 +13,8 @@
 #include "Tree.hpp"
 #include "Bloom_Filter.hpp"
 #include <chrono>
+//#include <thread>
+#include "Multi_thread_unit_test.hpp"
 
 using namespace std::chrono;
 
@@ -80,6 +82,18 @@ void create_file(){
     read_file(name, 2);
 }
 
+void range_test(){
+    Tree my_tree;
+    for(int i = 0; i < 400; i+=2){
+        my_tree.put(i, i-1);
+    }
+    std::vector<KVpair> res = my_tree.range(100, 150);
+    for(int i = 0; i < res.size(); i++){
+        std::cout << res.at(i).key << ":"<<res.at(i).value<<"  ";
+    }
+    std::cout<<std::endl;
+    
+}
 
 void tree_test(){
     Tree my_tree;
@@ -149,43 +163,19 @@ void tree_test_2(){
 }
 
 
-//void merge_test_file(){
-//    Buffer my_buffer;
-//    my_buffer.put(4,8);
-//    my_buffer.put(2,4);
-//    my_buffer.put(1,90);
-//    Layer my_layer;
-//    my_buffer.sort();
-//    my_layer.add_run_from_buffer(my_buffer);
-//    my_buffer.put(4,5);
-//    my_buffer.put(5,8);
-//    my_buffer.put(20,9);
-//    my_buffer.sort();
-//    my_layer.add_run_from_buffer(my_buffer);
-//    my_buffer.put(8,3);
-//    my_buffer.put(12,34);
-//    my_buffer.put(21,7);
-//    my_buffer.sort();
-//    my_layer.add_run_from_buffer(my_buffer);
-//    unsigned long size;
-//    BloomFilter *bf = NULL;
-//    FencePointer *fp = NULL;
-//    int num_pointers;
-//    std::string run = my_layer.pagewise_merge(size, bf, fp, num_pointers);
-//    read_file(run, size);
-//}
+/** Multi-threading querying**/
+std::string workload1 = "workload_balance_1.txt";
+std::string workload2 = "workload_balance_2.txt";
 
 void main_test(){
     Tree my_tree;
-    std::ifstream file ("workload_range.txt");
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    std::ifstream file (workload1);
     char action;
     int key, value;
     
-    std::ofstream out("out_range.txt");
-    std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
-    std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+    std::ofstream output_file("out_single.txt");
 
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
     if (file.is_open()) {
         while (!file.eof()) {
             file >> action;
@@ -198,9 +188,9 @@ void main_test(){
                 file >> key;
                 int query = NULL;
                 if(my_tree.get(key, query)){
-                    std::cout <<query<<std::endl;
+                    output_file<<query<<std::endl;
                 }else{
-                    std::cout<<std::endl;
+                    output_file<<std::endl;
                 }
             }else if (action == 'd') {
                 file >> key;
@@ -211,34 +201,297 @@ void main_test(){
                 file >> high;
                 std::vector<KVpair> res = my_tree.range(low, high);
                 for(int i = 0; i < res.size(); i++){
-                    std::cout << res.at(i).key << ":"<<res.at(i).value<<" ";
+                    output_file<< res.at(i).key << ":"<<res.at(i).value<<" ";
                 }
-                std::cout<<std::endl;
+                output_file<<std::endl;
             }else{
-                std::cout << "Error";
+                output_file<< "Error";
             }
         }
-        high_resolution_clock::time_point t2 = high_resolution_clock::now();
-        auto duration = duration_cast<microseconds>( t2 - t1 ).count();
-        std::cout << "-----------------------------------------------------" << std::endl;
-        std::cout << "The elapsed time is " << duration << " microseconds" << std::endl;
         file.close();
-        //std::cout << "All operations finished"<<std::endl;
+    }
+    file = std::ifstream(workload2);
+    if (file.is_open()) {
+        while (!file.eof()) {
+            file >> action;
+            if (action == 'p') {
+                file >> key;
+                file >> value;
+                my_tree.put(key, value);
+            }
+            else if (action == 'g') {
+                file >> key;
+                int query = NULL;
+                if(my_tree.get(key, query)){
+                    output_file<<query<<std::endl;
+                }else{
+                    output_file<<std::endl;
+                }
+            }else if (action == 'd') {
+                file >> key;
+                my_tree.del(key);
+            }else if (action == 'r'){
+                int low, high;
+                file >> low;
+                file >> high;
+                std::vector<KVpair> res = my_tree.range(low, high);
+                for(int i = 0; i < res.size(); i++){
+                    output_file<< res.at(i).key << ":"<<res.at(i).value<<" ";
+                }
+                output_file<<std::endl;
+            }else{
+                output_file<< "Error";
+            }
+        }
+        file.close();
+    }
+        high_resolution_clock::time_point t2 = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>( t2 - t1).count();
+        std::cout<< "-----------------------------------------------------" << std::endl;
+        std::cout<< "The elapsed time is " << duration << " microseconds" << std::endl;
+        
+}
+
+std::shared_timed_mutex global_mutex;
+
+void execute_workload(Tree* my_tree){
+    std::ifstream file(workload1);
+    char action;
+    int key, value;
+    std::ofstream output("out_range_multi.txt");
+    if (file.is_open()) {
+        while (!file.eof()) {
+            file >> action;
+            if (action == 'p') {
+                global_mutex.lock();
+                file >> key;
+                file >> value;
+                my_tree->put(key, value);
+                global_mutex.unlock();
+            }else if (action == 'g') {
+                global_mutex.lock_shared();
+                file >> key;
+                int query = NULL;
+                if(my_tree->get(key, query)){
+                    output<<query<<std::endl;
+                }else{
+                    output<<std::endl;
+                }
+                global_mutex.unlock_shared();
+            }else if (action == 'd') {
+                global_mutex.lock();
+                file >> key;
+                my_tree->del(key);
+                global_mutex.unlock();
+            }else if (action == 'r'){
+                global_mutex.lock_shared();
+                int low, high;
+                file >> low;
+                file >> high;
+                std::vector<KVpair> res = my_tree->range(low, high);
+                for(int i = 0; i < res.size(); i++){
+                    output<< res.at(i).key << ":"<<res.at(i).value<<" ";
+                }
+                output<<std::endl;
+                global_mutex.unlock_shared();
+            }else{
+                output<< "Error";
+            }
+        }
+        file.close();
+    }
+    output.close();
+}
+
+void execute_workload1(Tree* my_tree){
+    std::ifstream file(workload2);
+    char action;
+    int key, value;
+    std::ofstream output("out_range_multi1.txt");
+    if (file.is_open()) {
+        while (!file.eof()) {
+            file >> action;
+            if (action == 'p') {
+                global_mutex.lock();
+                file >> key;
+                file >> value;
+                my_tree->put(key, value);
+                global_mutex.unlock();
+            }else if (action == 'g') {
+                global_mutex.lock_shared();
+                file >> key;
+                int query = NULL;
+                if(my_tree->get(key, query)){
+                    output<<query<<std::endl;
+                }else{
+                    output<<std::endl;
+                }
+                global_mutex.unlock_shared();
+            }else if (action == 'd') {
+                global_mutex.lock();
+                file >> key;
+                my_tree->del(key);
+                global_mutex.unlock();
+            }else if (action == 'r'){
+                global_mutex.lock_shared();
+                int low, high;
+                file >> low;
+                file >> high;
+                std::vector<KVpair> res = my_tree->range(low, high);
+                for(int i = 0; i < res.size(); i++){
+                    output<< res.at(i).key << ":"<<res.at(i).value<<" ";
+                }
+                output<<std::endl;
+                global_mutex.unlock_shared();
+            }else{
+                output<< "Error";
+            }
+        }
+        file.close();
+    }
+    output.close();
+}
+
+std::mutex cout_mutex;
+
+void execute_workload_single_output(Tree* my_tree, std::ofstream* output){
+    std::ifstream file(workload1);
+    char action;
+    int key, value;
+    if (file.is_open()) {
+        while (!file.eof()) {
+            file >> action;
+            if (action == 'p') {
+                global_mutex.lock();
+                file >> key;
+                file >> value;
+                my_tree->put(key, value);
+                global_mutex.unlock();
+            }else if (action == 'g') {
+                global_mutex.lock_shared();
+                file >> key;
+                int query = NULL;
+                if(my_tree->get(key, query)){
+                    cout_mutex.lock();
+                    *output<<query<<std::endl;
+                    cout_mutex.unlock();
+                }else{
+                    cout_mutex.lock();
+                    *output<<std::endl;
+                    cout_mutex.unlock();
+                }
+                global_mutex.unlock_shared();
+            }else if (action == 'd') {
+                global_mutex.lock();
+                file >> key;
+                my_tree->del(key);
+                global_mutex.unlock();
+            }else if (action == 'r'){
+                global_mutex.lock_shared();
+                int low, high;
+                file >> low;
+                file >> high;
+                std::vector<KVpair> res = my_tree->range(low, high);
+                cout_mutex.lock();
+                for(int i = 0; i < res.size(); i++){
+                    *output<< res.at(i).key << ":"<<res.at(i).value<<" ";
+                }
+                *output<<std::endl;
+                cout_mutex.unlock();
+                global_mutex.unlock_shared();
+            }else{
+                *output<< "Error";
+            }
+        }
+        file.close();
     }
 }
 
-void range_test(){
-    Tree my_tree;
-    for(int i = 0; i < 400; i+=2){
-        my_tree.put(i, i-1);
+void execute_workload_single_output1(Tree* my_tree, std::ofstream* output){
+    std::ifstream file(workload2);
+    char action;
+    int key, value;
+    if (file.is_open()) {
+        while (!file.eof()) {
+            file >> action;
+            if (action == 'p') {
+                global_mutex.lock();
+                file >> key;
+                file >> value;
+                my_tree->put(key, value);
+                global_mutex.unlock();
+            }else if (action == 'g') {
+                global_mutex.lock_shared();
+                file >> key;
+                int query = NULL;
+                if(my_tree->get(key, query)){
+                    cout_mutex.lock();
+                    *output<<query<<std::endl;
+                    cout_mutex.unlock();
+                }else{
+                    cout_mutex.lock();
+                    *output<<std::endl;
+                    cout_mutex.unlock();
+                }
+                global_mutex.unlock_shared();
+            }else if (action == 'd') {
+                global_mutex.lock();
+                file >> key;
+                my_tree->del(key);
+                global_mutex.unlock();
+            }else if (action == 'r'){
+                global_mutex.lock_shared();
+                int low, high;
+                file >> low;
+                file >> high;
+                std::vector<KVpair> res = my_tree->range(low, high);
+                cout_mutex.lock();
+                for(int i = 0; i < res.size(); i++){
+                    *output<< res.at(i).key << ":"<<res.at(i).value<<" ";
+                }
+                *output<<std::endl;
+                cout_mutex.unlock();
+                global_mutex.unlock_shared();
+            }else{
+                *output<< "Error";
+            }
+        }
+        file.close();
     }
-    std::vector<KVpair> res = my_tree.range(100, 150);
-    for(int i = 0; i < res.size(); i++){
-        std::cout << res.at(i).key << ":"<<res.at(i).value<<"  ";
+}
+
+
+void multi_thread_test(bool single){
+    Tree* my_tree = new Tree();
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    if(single){
+        std::ofstream output("out_range_multi_single.txt");
+        std::thread thread1(execute_workload_single_output, my_tree, &output);
+        std::thread thread2(execute_workload_single_output, my_tree, &output);
+        
+        thread1.join();
+        thread2.join();
+        
+        output.close();
+    }else{
+        std::thread thread1(execute_workload, my_tree);
+        std::thread thread2(execute_workload1, my_tree);
+        
+        thread1.join();
+        thread2.join();
     }
-    std::cout<<std::endl;
+
+    
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>( t2 - t1 ).count();
+    std::cout << "-----------------------------------------------------" << std::endl;
+    std::cout << "The elapsed time is " << duration << " microseconds" << std::endl;
     
 }
+
+
+
+
 
 
 
@@ -248,9 +501,17 @@ int main(int argc, const char * argv[]) {
     //read_file("run_1_1", 3);
     //bloomfilter_test();
     //create_file();
-    main_test();
+    //main_test();
     //tree_test();
     //range_test();
+    multi_thread_test(false);
+    //concurrent_read();
+    //concurrent_write(true);
+    //read_then_write();
+    //write_then_read(false);
 }
+
+
+
 
 

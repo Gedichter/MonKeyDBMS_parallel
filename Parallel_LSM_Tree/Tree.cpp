@@ -11,6 +11,7 @@
 #include <cmath>
 #include <unordered_map>
 
+
 Tree::Tree(){
     Layer layer;
     layer.set_rank(0);
@@ -62,29 +63,37 @@ void Tree::flush(){
 }
 
 void Tree::put(int key, int value){
+    //global_mutex.lock();
     if(buffer.put(key, value)){
         flush();
     }
+    //global_mutex.unlock();
 };
 
 bool Tree::get(int key, int& value){
+    //global_mutex.lock_shared();
     switch (buffer.get(key, value)) {
         case 1:
+            //global_mutex.unlock_shared();
             return true;
         case -1:
+            //global_mutex.unlock_shared();
             return false;
         default:
             for(int i = 0; i < layers.size(); i++){
                 switch (layers.at(i).get(key, value)) {
                     case 1:
+                        //global_mutex.unlock_shared();
                         return true;
                     case -1:
+                        //global_mutex.unlock_shared();
                         return false;
                     default:
                         break;
                 }
             }
     }
+    //global_mutex.unlock_shared();
     return false;
 };
 
@@ -96,6 +105,7 @@ bool Tree::get(int key, int& value){
  return vector of the key-value pair
  */
 std::vector<KVpair> Tree::range(int low, int high){
+    //global_mutex.lock_shared();
     std::unordered_map<int, KVpair> result_buffer;
     buffer.range(low, high, result_buffer);
     for(int i = 0; i < layers.size(); i++){
@@ -109,12 +119,15 @@ std::vector<KVpair> Tree::range(int low, int high){
             result.push_back(kv);
         }
     }
+  // global_mutex.unlock_shared();
     return result;
 };
 
 void Tree::del(int key){
+    //global_mutex.lock();
     if(buffer.del(key)){
         flush();
     }
+    //global_mutex.unlock();
 };
 

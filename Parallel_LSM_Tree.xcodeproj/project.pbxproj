@@ -37,6 +37,7 @@
 		599E734E2090D6760032B50A /* LSM.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LSM.cpp; sourceTree = "<group>"; };
 		599E734F2090D6760032B50A /* Tree.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Tree.hpp; sourceTree = "<group>"; };
 		599E73502090D6760032B50A /* Bloom_Filter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Bloom_Filter.cpp; sourceTree = "<group>"; };
+		599E7356209219C70032B50A /* Multi_thread_unit_test.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Multi_thread_unit_test.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,6 +79,7 @@
 				599E734F2090D6760032B50A /* Tree.hpp */,
 				599E73492090D6690032B50A /* Bloom_Filter.hpp */,
 				599E73422090D59F0032B50A /* main.cpp */,
+				599E7356209219C70032B50A /* Multi_thread_unit_test.hpp */,
 			);
 			path = Parallel_LSM_Tree;
 			sourceTree = "<group>";
