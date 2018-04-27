@@ -1,32 +1,31 @@
 //
-//  Tree.cpp
-//  LSM_Tree
+//  Tree_thread_test.cpp
+//  Parallel_LSM_Tree
 //
-//  Created by Shiyu Huang on 2/22/18.
+//  Created by Shiyu Huang on 4/26/18.
 //  Copyright © 2018 Shiyu Huang. All rights reserved.
 //
 
-#include "Tree.hpp"
+#include "Tree_thread_test.hpp"
 #include "LSM.hpp"
 #include <cmath>
 #include <unordered_map>
 
 
-
-Tree::Tree(){
+Test_Tree::Test_Tree(){
     Layer layer;
     layer.set_rank(0);
     layers.push_back(layer);
 }
 
-std::shared_timed_mutex Tree::global_mutex;
+std::shared_timed_mutex Test_Tree::global_mutex;
 
 /**
  flush buffer to the LSM tree
  
  @return when true, the first layer has reached its limit
  */
-bool Tree::bufferFlush(){
+bool Test_Tree::bufferFlush(){
     buffer.sort();
     return layers[0].add_run_from_buffer(buffer);
 }
@@ -38,7 +37,7 @@ bool Tree::bufferFlush(){
  high layer to be flushed in
  @return when true, the high layer has reached its limit
  */
-bool Tree::layerFlush(Layer &low, Layer &high){
+bool Test_Tree::layerFlush(Layer &low, Layer &high){
     int num_pointers = 0;
     unsigned long size = 0;
     BloomFilter *bf = NULL;
@@ -47,7 +46,7 @@ bool Tree::layerFlush(Layer &low, Layer &high){
     return high.add_run(new_run, size, bf, fp, num_pointers);
 };
 
-void Tree::flush(){
+void Test_Tree::flush(){
     if(bufferFlush()){
         int level = 0;
         bool goOn = true;
@@ -62,22 +61,25 @@ void Tree::flush(){
             layerFlush(layers.at(level), layers.at(level+1));
         }
     }
-
+    
 }
 
-void Tree::put(int key, int value){
+void Test_Tree::put(int key, int value, int id){
     global_mutex.lock();
     if(buffer.put(key, value)){
         flush();
     }
+    std::cout<<"thread " << id << " successfully writes "<< key << "->" << value <<std::endl;
     global_mutex.unlock();
 };
 
-bool Tree::get(int key, int& value){
+bool Test_Tree::get(int key, int& value, int id){
     global_mutex.lock_shared();
+    std::cout<<"thread " << id << " queries key "<<key<<std::endl;
     switch (buffer.get(key, value)) {
         case 1:
             global_mutex.unlock_shared();
+            std::cout<<"The value is " << value<<std::endl;
             return true;
         case -1:
             global_mutex.unlock_shared();
@@ -86,6 +88,7 @@ bool Tree::get(int key, int& value){
             for(int i = 0; i < layers.size(); i++){
                 switch (layers.at(i).get(key, value)) {
                     case 1:
+                        std::cout<<"The value is " << value<<std::endl;
                         global_mutex.unlock_shared();
                         return true;
                     case -1:
@@ -107,7 +110,7 @@ bool Tree::get(int key, int& value){
  high : not include
  return vector of the key-value pair
  */
-std::vector<KVpair> Tree::range(int low, int high){
+std::vector<KVpair> Test_Tree::range(int low, int high){
     global_mutex.lock_shared();
     std::unordered_map<int, KVpair> result_buffer;
     buffer.range(low, high, result_buffer);
@@ -122,15 +125,14 @@ std::vector<KVpair> Tree::range(int low, int high){
             result.push_back(kv);
         }
     }
-   global_mutex.unlock_shared();
+    global_mutex.unlock_shared();
     return result;
 };
 
-void Tree::del(int key){
+void Test_Tree::del(int key){
     global_mutex.lock();
     if(buffer.del(key)){
         flush();
     }
     global_mutex.unlock();
 };
-

@@ -13,38 +13,32 @@
 #include <thread>
 #include <shared_mutex>
 #include <chrono>
-#include "Tree.hpp"
+#include "Tree_thread_test.hpp"
 
-std::shared_timed_mutex rwlock;
 
-bool get(Tree* tree, int key, int id){
+bool get(Test_Tree* tree, int key, int id){
     int value;
-    rwlock.lock_shared();
-    bool res = tree->get(key, value);
-    std::cout<<"thread " << id << " get value "<<value<<std::endl;
-    rwlock.unlock_shared();
+    bool res = tree->get(key, value, id);
     return res;
 }
 
-void put(Tree* tree,int id, bool wait){
+void put(Test_Tree* tree,int id, bool wait){
     for(int i = 0; i < 5; i++){
         int key = i;
         int value = i+1;
-        rwlock.lock();
-        tree->put(key, value);
-        std::cout<<"thread " << id << " successfully writes "<< key << "->" << value <<std::endl;
-        rwlock.unlock();
+        tree->put(key, value, id);
         if(wait) std::this_thread::sleep_for(std::chrono::microseconds(5));
     }
 
 }
 
 void concurrent_read(){
-    Tree* my_tree = new Tree();
+    Test_Tree* my_tree = new Test_Tree();
     //put some initial values in the tree
     for(int i = 0; i < 10; i++){
-        my_tree->put(i, i);
+        my_tree->put(i, i, 0);
     }
+    std::cout<<"-------setup phase ended-------"<<std::endl;
     std::thread thread1(get, my_tree, 2, 1);
     std::thread thread2(get, my_tree, 4, 2);
     
@@ -53,7 +47,7 @@ void concurrent_read(){
 }
 
 void concurrent_write(bool wait){
-    Tree* my_tree = new Tree();
+    Test_Tree* my_tree = new Test_Tree();
     std::thread thread1(put, my_tree, 1, wait);
     std::thread thread2(put, my_tree, 2, wait);
     
@@ -62,10 +56,11 @@ void concurrent_write(bool wait){
 }
 
 void read_then_write(){
-    Tree* my_tree = new Tree();
+    Test_Tree* my_tree = new Test_Tree();
     for(int i = 0; i < 5; i++){
-        my_tree->put(i, i);
+        my_tree->put(i, i, 0);
     }
+    std::cout<<"-------setup phase ended-------"<<std::endl;
     std::thread thread1(get, my_tree, 4, 1);
     std::thread thread2(put, my_tree, 2, false);
     
@@ -74,10 +69,11 @@ void read_then_write(){
 }
 
 void write_then_read(bool wait){
-    Tree* my_tree = new Tree();
+    Test_Tree* my_tree = new Test_Tree();
     for(int i = 0; i < 5; i++){
-        my_tree->put(i, i);
+        my_tree->put(i, i, 0);
     }
+    std::cout<<"-------setup phase ended-------"<<std::endl;
     std::thread thread2(put, my_tree, 2, wait);
     std::thread thread1(get, my_tree, 4, 1);    
     thread1.join();

@@ -12,6 +12,7 @@
 		599E73522090D6760032B50A /* old_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 599E734D2090D6760032B50A /* old_test.cpp */; };
 		599E73532090D6760032B50A /* LSM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 599E734E2090D6760032B50A /* LSM.cpp */; };
 		599E73542090D6760032B50A /* Bloom_Filter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 599E73502090D6760032B50A /* Bloom_Filter.cpp */; };
+		599E735D209288320032B50A /* Tree_thread_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 599E735B209288320032B50A /* Tree_thread_test.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -38,6 +39,8 @@
 		599E734F2090D6760032B50A /* Tree.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Tree.hpp; sourceTree = "<group>"; };
 		599E73502090D6760032B50A /* Bloom_Filter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Bloom_Filter.cpp; sourceTree = "<group>"; };
 		599E7356209219C70032B50A /* Multi_thread_unit_test.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Multi_thread_unit_test.hpp; sourceTree = "<group>"; };
+		599E735B209288320032B50A /* Tree_thread_test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Tree_thread_test.cpp; sourceTree = "<group>"; };
+		599E735C209288320032B50A /* Tree_thread_test.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Tree_thread_test.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,10 +79,12 @@
 				599E734D2090D6760032B50A /* old_test.cpp */,
 				599E734C2090D6760032B50A /* old_test.hpp */,
 				599E734B2090D6760032B50A /* Tree.cpp */,
+				599E735B209288320032B50A /* Tree_thread_test.cpp */,
+				599E735C209288320032B50A /* Tree_thread_test.hpp */,
+				599E7356209219C70032B50A /* Multi_thread_unit_test.hpp */,
 				599E734F2090D6760032B50A /* Tree.hpp */,
 				599E73492090D6690032B50A /* Bloom_Filter.hpp */,
 				599E73422090D59F0032B50A /* main.cpp */,
-				599E7356209219C70032B50A /* Multi_thread_unit_test.hpp */,
 			);
 			path = Parallel_LSM_Tree;
 			sourceTree = "<group>";
@@ -143,6 +148,7 @@
 				599E73532090D6760032B50A /* LSM.cpp in Sources */,
 				599E73432090D59F0032B50A /* main.cpp in Sources */,
 				599E73512090D6760032B50A /* Tree.cpp in Sources */,
+				599E735D209288320032B50A /* Tree_thread_test.cpp in Sources */,
 				599E73522090D6760032B50A /* old_test.cpp in Sources */,
 				599E73542090D6760032B50A /* Bloom_Filter.cpp in Sources */,
 			);
