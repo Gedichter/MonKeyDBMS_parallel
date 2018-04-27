@@ -164,6 +164,10 @@ void Layer::set_rank(int r){
     rank = r;
 }
 
+int Layer::get_rank(){
+    return rank;
+};
+
 /**
  Add element in the buffer to the first level of the LSM tree
  

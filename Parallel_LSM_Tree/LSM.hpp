@@ -85,6 +85,7 @@ public:
     bool add_run_from_buffer(Buffer &buffer);
     bool add_run(std::string run, unsigned long size, BloomFilter* bf, FencePointer* fp, int num_pointers);
     void set_rank(int r);
+    int get_rank();
     void range_run(int low, int high, std::unordered_map<int, KVpair>& range_buffer, int index);
     
 };

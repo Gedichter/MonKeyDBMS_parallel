@@ -14,11 +14,13 @@
 #include <vector>
 #include <shared_mutex>
 #include <mutex>
+#include <deque>
 
 
 class Tree{
     Buffer buffer;
-    static std::shared_timed_mutex global_mutex;
+    static std::shared_timed_mutex buffer_mutex;
+    static std::vector<std::shared_timed_mutex*> layers_mutexes;
 
 public:
     std::vector<Layer> layers;

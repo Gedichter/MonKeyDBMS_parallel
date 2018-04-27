@@ -27,7 +27,7 @@ void workload(Tree* my_tree, std::string file_name){
     std::ifstream file(file_name);
     char action;
     int key, value;
-    std::string out_name = "out_" + file_name;
+    std::string out_name = "fine_grained_out_" + file_name;
     std::ofstream output(out_name);
     if (file.is_open()) {
         while (!file.eof()) {
@@ -119,8 +119,8 @@ int main(int argc, const char * argv[]) {
     //concurrent_write(false);
     //read_then_write();
     //write_then_read(true);
-    //serial_evaluation();
-    //thread_evaluation();
+    serial_evaluation();
+    thread_evaluation();
     //black_box_test();
 }
 
