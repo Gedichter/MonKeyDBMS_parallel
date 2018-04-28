@@ -18,8 +18,8 @@
 
 using namespace std::chrono;
 
-std::string workload0 = "workload_balance_0.txt";
-std::string workload1 = "workload_balance_1.txt";
+std::string workload0 = "workload_10_1_heavy_1.txt";
+std::string workload1 = "workload_10_1_heavy_2.txt";
 std::string workload2 = "workload_balance_2.txt";
 std::string workload3 = "workload_balance_3.txt";
 
@@ -80,17 +80,17 @@ void serial_evaluation(){
 
 void thread_evaluation(){
     Tree* my_tree = new Tree();
-    std::cout<< "-----------multi-thread evaluation------------------------" << std::endl;
+    std::cout<< "-----------multi-thread evaluation(fine grained)------------------------" << std::endl;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     std::thread thread0(workload, my_tree, workload0);
     std::thread thread1(workload, my_tree, workload1);
-    std::thread thread2(workload, my_tree, workload2);
-    std::thread thread3(workload, my_tree, workload3);
+    //std::thread thread2(workload, my_tree, workload2);
+    //std::thread thread3(workload, my_tree, workload3);
     
     thread0.join();
     thread1.join();
-    thread2.join();
-    thread3.join();
+    //thread2.join();
+    //thread3.join();
     
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>( t2 - t1).count();
@@ -119,7 +119,7 @@ int main(int argc, const char * argv[]) {
     //concurrent_write(false);
     //read_then_write();
     //write_then_read(true);
-    serial_evaluation();
+    //serial_evaluation();
     thread_evaluation();
     //black_box_test();
 }
